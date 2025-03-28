@@ -1,18 +1,31 @@
 {% extends 'base.html' %} {% block content %}
 
 <div class="container mt-4">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-        <a href="{% url 'expenses'%}">Expenses</a>
-      </li>
-      <li class="breadcrumb-item active" aria-current="page">Edit Expense</li>
-    </ol>
-  </nav>
+  <div class="row">
+    <div class="col-md-10">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{% url 'expenses'%}">Expenses</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            Edit Expense
+          </li>
+        </ol>
+      </nav>
+    </div>
 
+    <div class="col-md-2">
+      <a
+        href="{% url 'expense-delete' expenses.id %}"
+        class="btn btn-danger btn-sm"
+        >Delete</a
+      >
+    </div>
+  </div>
   <div class="card">
     <div class="card-body">
-      <form action="{% url 'expense-edit' expense.id %}" method="post">
+      <form action="{% url 'expense-edit' expenses.id %}" method="post">
         {% include 'partials/messages.html'%} 
         {% csrf_token %}
         <div class="form-group">
@@ -36,7 +49,6 @@
         <div class="form-group">
           <label for="">Category</label>
           <select class="form-control" name="category">
-            <option name="category" value="{{value.category}}">{{value.category}}</option>
             {% for category in categories %}
             <option name="category" value="{{category.name}}">{{category.name}}</option>
             {% endfor %}
