@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 import os
 import json
 from django.conf import settings
@@ -8,12 +8,11 @@ from django.contrib import messages
 def index(request):
     currency_data = []
     file_path = os.path.join(settings.BASE_DIR, 'currencies.json')
-
     with open(file_path, 'r') as json_file:
         data = json.load(json_file)
         for k, v in data.items():
-            currency_data.append({'name': k, 'value': v})
-
+            currency_data.append({"name":k, "value":v})
+    
     exists = UserPreference.objects.filter(user=request.user).exists()
     user_preferences = None
     if exists:
@@ -29,3 +28,16 @@ def index(request):
             UserPreference.objects.create(user=request.user, currency=currency)
         messages.success(request, 'Changes saved')
         return render(request, 'preferences/index.html', {'currencies': currency_data, 'user_preferences': user_preferences})
+    
+
+
+
+# if request.method == "post":
+    # currency = request.post.get('currency')
+    # UserPreference.objects.create(
+        # user = request.user,
+        # currency=currency
+    # )
+    # UserPreference.save()
+    # # messages.success(request,"Currency Successfully Saved")
+# # return render(request,"preferences/index.html",{"currencies":currency_data})
