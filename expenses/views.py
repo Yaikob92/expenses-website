@@ -5,8 +5,12 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from userpreferences.models import UserPreference
+import datetime
+import csv
+import xlwt
+
 # Create your views here.
 
 def search_expenses(request):
@@ -99,15 +103,64 @@ def delete_expense(request, id):
   messages.success(request,"Expenses removed")
   return redirect("expenses")
 
+def expense_category_summary(request):
+   todays_date = datetime.date.today()
+   six_month_ago = todays_date-datetime.timedelta(days=30*6)
+   # Filter expenses within the last six months
+   expenses = Expense.objects.filter(
+      owner = request.user, date__gte = six_month_ago,date__lte=todays_date
+   )
+   finalrep = {}
+   def get_category(expense):
+      return expense.category
+   category_list = list(set(map(get_category,expenses)))
+   def get_expenses_category_amount(category):
+      amount = 0
+      filtered_by_category = expenses.filter(category=category)
+      for item in filtered_by_category:
+         amount += item.amount
+      return amount
+   for x in expenses:
+      for y in category_list:
+         finalrep[y] = get_expenses_category_amount(y)
+   return JsonResponse({'expense_category_data': finalrep}, safe=False)
 
+def stats_view(request):
+   return render(request,"expenses/stats.html")
 
+def export_csv(request):
+   response = HttpResponse(content_type='text/csv')
+   response['Content-Disposition'] = 'attachment; filename+Expenses'+ str(datetime.datetime.now()) + '.csv'
+   
+   writer = csv.writer(response)
+   writer.writerow(['Amount',"Description","Category","Date"])
+   expenses = Expense.objects.filter(owner=request.user)
+   for expense in expenses:
+      writer.writerow([expense.amount,expense.description,expense.category,expense.date])
+   return response
 
+def export_excel(request):
+   response = HttpResponse(content_type='application/ms-excel')
+   response['Content-Disposition'] = 'attachment; filename+Expenses'+ str(datetime.datetime.now()) + '.xls'
+   
+   wb = xlwt.Workbook(encoding='utf-8')
+   ws = wb.add_sheet('Expenses')
+   row_num = 0
+   font_sytle = xlwt.XFStyle()
+   font_sytle.font.bold = True
+   columns = ['Amount',"Description","Category","Date"]
+   for col_num in range(len(columns)):
+      ws.write(row_num,col_num,columns[col_num],font_sytle)
+   font_sytle = xlwt.XFStyle()
 
+   rows = Expense.objects.filter(owner = request.user).values_list("amount","description","category","date")
 
-
-
-
-
+   for row in rows:
+      row_num += 1
+      for col_num in range(len(row)):
+         ws.write(row_num,col_num,str(row[col_num]),font_sytle)
+   wb.save(response)
+   return response
 
 
 

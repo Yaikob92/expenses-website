@@ -28,16 +28,3 @@ def index(request):
             UserPreference.objects.create(user=request.user, currency=currency)
         messages.success(request, 'Changes saved')
         return render(request, 'preferences/index.html', {'currencies': currency_data, 'user_preferences': user_preferences})
-    
-
-
-
-# if request.method == "post":
-    # currency = request.post.get('currency')
-    # UserPreference.objects.create(
-        # user = request.user,
-        # currency=currency
-    # )
-    # UserPreference.save()
-    # # messages.success(request,"Currency Successfully Saved")
-# # return render(request,"preferences/index.html",{"currencies":currency_data})
